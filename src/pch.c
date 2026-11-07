@@ -2358,6 +2358,7 @@ do_ed_script (char *input_name, struct outfile *output, FILE *ofp)
     off_t beginning_of_this_line;
     FILE *tmpfp = NULL;
     int tmpfd = -1; /* placate gcc's -Wmaybe-uninitialized */
+    bool empty = true;
 
     if (! dry_run && ! skip_rest_of_patch)
       {
@@ -2385,6 +2386,7 @@ do_ed_script (char *input_name, struct outfile *output, FILE *ofp)
 	}
 	ed_command_letter = get_ed_command_letter (patchbuf);
 	if (ed_command_letter) {
+	    empty = false;
 	    if (tmpfp)
 	      Fwrite (patchbuf, 1, chars_read, tmpfp);
 	    if (ed_command_letter != 'd' && ed_command_letter != 's') {
@@ -2403,6 +2405,8 @@ do_ed_script (char *input_name, struct outfile *output, FILE *ofp)
 	    break;
 	}
     }
+    if (empty)
+      fatal ("no ed command found at line %td", p_input_line);
     if (!tmpfp)
       return;
     static char const w_q[] = { 'w', '\n', 'q', '\n' };
