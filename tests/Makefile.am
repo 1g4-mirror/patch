@@ -53,6 +53,7 @@ TESTS = \
 	no-backup \
 	no-mode-change-git-diff \
 	no-newline-triggers-assert \
+	normal-diff-dot-line \
 	preserve-c-function-names \
 	preserve-mode-and-timestamp \
 	quoted-filenames \

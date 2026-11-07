@@ -781,7 +781,7 @@ intuit_diff_type (bool need_header, mode_t *p_file_type)
 	if (need_header)
 	  continue;
 	if ((diff_type == NO_DIFF || diff_type == ED_DIFF) &&
-	  first_command_line >= 0 &&
+	  first_command_line >= 0 && first_ed_command_letter &&
 	  strEQ(s, ".\n") ) {
 	    p_start = first_command_line;
 	    p_sline = fcl_line;
