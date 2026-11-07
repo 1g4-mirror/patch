@@ -444,6 +444,60 @@ name_is_valid (char const *name)
   return is_valid;
 }
 
+static char const * ATTRIBUTE_PURE
+skip_number (char const *s)
+{
+  char const *t = s;
+
+  while (c_isdigit (*t))
+    t++;
+  if (t == s)
+    return NULL;
+  return t;
+}
+
+static bool ATTRIBUTE_PURE
+is_normal_command (char const *s)
+{
+  char const *t;
+  bool pair = false;
+
+  if (! (t = skip_number (s)))
+    return false;
+  if (*t == ',')
+    {
+      if (! (t = skip_number (t + 1)))
+	return false;
+      pair = true;
+    }
+  switch(*t) {
+    case 'd':  /* pair only allowed in the front */
+      if (! (t = skip_number (t + 1)))
+	return false;
+      break;
+    case 'a': /* pair only allowed in the back */
+      if (pair)
+	return false;
+      /* fall through */
+    case 'c':  /* pair allowed in the front and back */
+      if (! (t = skip_number (t + 1)))
+	return false;
+      if (*t == ',')
+	{
+	  if (! (t = skip_number (t + 1)))
+	    return false;
+	}
+      break;
+    default:
+      return false;
+  }
+  while (c_isblank (*t))
+    t++;
+  if (*t == '\r')
+    t++;
+  return *t == '\n';
+}
+
 /* Determine what kind of diff is in the remaining part of the patch file. */
 
 static enum diff
@@ -545,25 +599,12 @@ intuit_diff_type (bool need_header, mode_t *p_file_type)
 	    else
 		indent++;
 	}
-	if (c_isdigit (*s))
-	  {
-	    for (t = s + 1; c_isdigit (*t) || *t == ',';  t++)
-	      /* do nothing */ ;
-	    if (*t == 'd' || *t == 'c' || *t == 'a')
-	      {
-		for (t++; c_isdigit (*t) || *t == ','; t++)
-		  /* do nothing */ ;
-		for (; c_isblank (*t); t++)
-		  /* do nothing */ ;
-		if (*t == '\r')
-		  t++;
-		this_is_a_command = (*t == '\n');
-	      }
-	  }
+	this_is_a_command = is_normal_command (s);
+	ed_command_letter = 0;
 	if (! need_header
 	    && first_command_line < 0
-	    && ((ed_command_letter = get_ed_command_letter (s))
-		|| this_is_a_command)) {
+	    && (this_is_a_command ||
+	        (ed_command_letter = get_ed_command_letter (s)))) {
 	    first_command_line = this_line;
 	    first_ed_command_letter = ed_command_letter;
 	    fcl_line = p_input_line;
